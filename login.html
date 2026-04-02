@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Product</title>
+    <title>Atlantic Metals - Login</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/store.css">
-    <link rel="stylesheet" href="css/product.css">
+    <link rel="stylesheet" href="css/login.css">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
-    <!-- CART DRAWER -->
     <div class="cart-overlay" id="cartOverlay"></div>
     <div class="cart-drawer" id="cartDrawer">
         <div class="cart-drawer-header">
@@ -29,7 +28,7 @@
     <div class="sticky-wrapper">
 
         <div class="ticker">
-            <a href="gold.html" class="metal-card">
+            <a href="products.html?metal=gold" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name gold-text">Gold</span>
                     <span id="gold-price" class="metal-price gold">--</span>
@@ -38,7 +37,7 @@
                     <span id="gold-change" class="metal-change">--</span>
                 </div>
             </a>
-            <a href="silver.html" class="metal-card">
+            <a href="products.html?metal=silver" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name silver-text">Silver</span>
                     <span id="silver-price" class="metal-price silver">--</span>
@@ -47,7 +46,7 @@
                     <span id="silver-change" class="metal-change">--</span>
                 </div>
             </a>
-            <a href="platinum.html" class="metal-card">
+            <a href="products.html?metal=platinum" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name platinum-text">Platinum</span>
                     <span id="platinum-price" class="metal-price platinum">--</span>
@@ -56,7 +55,7 @@
                     <span id="platinum-change" class="metal-change">--</span>
                 </div>
             </a>
-            <a href="palladium.html" class="metal-card">
+            <a href="products.html?metal=palladium" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name palladium-text">Palladium</span>
                     <span id="palladium-price" class="metal-price palladium">--</span>
@@ -72,11 +71,11 @@
             <div class="navbar-right">
                 <div class="nav-search-wrap">
                     <input type="text" class="nav-search" id="navSearch" placeholder="Search products...">
-                    <span class="nav-search-icon">🔍</span>
+                    <span class="nav-search-icon">&#128269;</span>
                 </div>
                 <a href="login.html" class="nav-login" id="navAccount">Login</a>
                 <a class="nav-cart" id="cartBtn">
-                    🛒 Cart
+                    Cart
                     <span class="cart-count" id="cartCount">0</span>
                 </a>
             </div>
@@ -121,14 +120,111 @@
         </nav>
     </div>
 
-    <div class="product-page">
-        <div class="product-detail" id="productDetail"></div>
+    <div class="login-page">
+        <div class="login-card">
+
+            <div class="login-header">
+                <a href="index.html" class="login-brand">Atlantic Metals</a>
+                <h1 class="login-title" id="loginTitle">Welcome back</h1>
+                <p class="login-subtitle" id="loginSubtitle">Sign in to your account</p>
+            </div>
+
+            <div class="login-tabs">
+                <button class="login-tab active" id="tabLogin">Sign In</button>
+                <button class="login-tab" id="tabRegister">Create Account</button>
+            </div>
+
+            <div class="login-form" id="loginForm">
+
+                <div class="form-group">
+                    <label for="loginEmail">Email address</label>
+                    <input type="email" id="loginEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Enter your password">
+                        <button class="show-hide-btn" id="toggleLoginPw" data-target="loginPassword">Show</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="rememberMe">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="forgot.html" class="forgot-link">Forgot password?</a>
+                </div>
+
+                <div class="form-error" id="loginError"></div>
+
+                <button class="form-submit" id="loginBtn">Sign In</button>
+
+                <p class="form-switch">
+                    Don't have an account?
+                    <button class="switch-btn" id="switchToRegister">Create one</button>
+                </p>
+
+            </div>
+
+            <div class="login-form hidden" id="registerForm">
+
+                <div class="form-row-half">
+                    <div class="form-group">
+                        <label for="regFirstName">First Name</label>
+                        <input type="text" id="regFirstName" class="form-input" placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="regLastName">Last Name</label>
+                        <input type="text" id="regLastName" class="form-input" placeholder="Smith">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regPhone">Phone Number</label>
+                    <input type="tel" id="regPhone" class="form-input" placeholder="+1 (416) 000-0000">
+                </div>
+
+                <div class="form-group">
+                    <label for="regEmail">Email address</label>
+                    <input type="email" id="regEmail" class="form-input" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="regPassword" class="form-input" placeholder="Create a password">
+                        <button class="show-hide-btn" id="toggleRegPw" data-target="regPassword">Show</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirm">Confirm Password</label>
+                    <div class="input-wrap">
+                        <input type="password" id="regConfirm" class="form-input" placeholder="Repeat your password">
+                        <button class="show-hide-btn" id="toggleRegConfirm" data-target="regConfirm">Show</button>
+                    </div>
+                </div>
+
+                <div class="form-error" id="registerError"></div>
+
+                <button class="form-submit" id="registerBtn">Create Account</button>
+
+                <p class="form-switch">
+                    Already have an account?
+                    <button class="switch-btn" id="switchToLogin">Sign in</button>
+                </p>
+
+            </div>
+
+        </div>
     </div>
 
     <script src="js/data.js"></script>
-    <script src="js/product.js"></script>
     <script src="js/script.js"></script>
     <script src="js/cart.js"></script>
+    <script src="js/login.js"></script>
     <script src="js/footer.js"></script>
 
 </body>

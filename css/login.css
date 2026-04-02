@@ -1,0 +1,261 @@
+.login-page {
+    min-height: calc(100vh - 180px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px;
+    background: #0d0d0d;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 40px;
+    box-sizing: border-box;
+}
+
+/* HEADER */
+.login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.login-brand {
+    display: inline-block;
+    color: #c9a84c;
+    font-size: 16px;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+}
+
+.login-brand:hover {
+    color: #e0c070;
+}
+
+.login-title {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.login-subtitle {
+    color: #888;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* TABS */
+.login-tabs {
+    display: flex;
+    background: #0f0f0f;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    gap: 4px;
+}
+
+.login-tab {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #777;
+    padding: 9px 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+    transition: 0.2s;
+}
+
+.login-tab.active {
+    background: #222;
+    color: #ffffff;
+}
+
+.login-tab:hover {
+    color: #aaa;
+}
+
+/* FORM */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.login-form.hidden {
+    display: none;
+}
+
+.form-row-half {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.form-group label {
+    color: #999;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
+
+.form-input {
+    background: #161616;
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+    padding: 11px 14px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: 'JetBrains Mono', monospace;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.form-input:focus {
+    border-color: #c9a84c;
+    background: #1a1a1a;
+}
+
+.form-input::placeholder {
+    color: #444;
+}
+
+.input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrap .form-input {
+    padding-right: 60px;
+}
+
+.show-hide-btn {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    transition: color 0.2s;
+}
+
+.show-hide-btn:hover {
+    color: #c9a84c;
+}
+
+.form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #888;
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.checkbox-label input {
+    accent-color: #c9a84c;
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+.forgot-link {
+    color: #888;
+    font-size: 13px;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.forgot-link:hover {
+    color: #c9a84c;
+}
+
+.form-error {
+    background: rgba(200, 60, 60, 0.07);
+    border: 1px solid rgba(200, 60, 60, 0.18);
+    border-radius: 7px;
+    padding: 10px 14px;
+    color: #c06060;
+    font-size: 13px;
+    display: none;
+    line-height: 1.5;
+}
+
+.form-submit {
+    background: #c9a84c;
+    color: #000;
+    border: none;
+    padding: 13px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.5px;
+    font-family: 'JetBrains Mono', monospace;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 4px;
+}
+
+.form-submit:hover {
+    background: #b8973f;
+}
+
+.form-submit:active {
+    transform: scale(0.99);
+}
+
+.form-switch {
+    text-align: center;
+    color: #777;
+    font-size: 13px;
+    margin: 4px 0 0 0;
+}
+
+.switch-btn {
+    background: none;
+    border: none;
+    color: #c9a84c;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    font-family: 'JetBrains Mono', monospace;
+    transition: color 0.2s;
+}
+
+.switch-btn:hover {
+    color: #e0c070;
+}
