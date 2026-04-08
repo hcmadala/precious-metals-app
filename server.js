@@ -125,8 +125,7 @@ async function initDB() {
 
     // Migrate existing users table — add new columns if they don't exist yet
     const [cols] = await conn.execute(
-      "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'users'",
-      ["atlanticmetals"]
+      "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'"
     );
     const existing = cols.map(c => c.COLUMN_NAME);
     if (!existing.includes("phone"))       await conn.execute("ALTER TABLE users ADD COLUMN phone VARCHAR(30)");
