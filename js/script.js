@@ -1,30 +1,10 @@
-// History is now provided by the server — no more localStorage building.
-// On every fetch the server returns both the current price AND the last 30
-// historical data points recorded from the background worker, so every
-// device (phone, laptop, desktop) renders the exact same sparkline.
+// Price history and NY Close baseline both come from the server.
+// This means every device — phone, laptop, recruiter's desktop — shows
+// the exact same sparkline AND the exact same daily change figure.
 
-let history = { XAU: [], XAG: [], XPT: [], XPD: [] };
+let history  = { XAU: [], XAG: [], XPT: [], XPD: [] };
+let nyClose  = { XAU: null, XAG: null, XPT: null, XPD: null };
 let lastPrice = {};
-
-// Base price for the daily % change calculation.
-// We still persist this in localStorage because it only needs to survive
-// within the same browser session — it's not shared across devices.
-function getBaseKey() {
-  const now = new Date();
-  const resetHour = 18;
-  let date = new Date(now);
-  if (now.getHours() < resetHour) date.setDate(date.getDate() - 1);
-  return "base_price_" + date.toISOString().slice(0, 10);
-}
-
-function getBasePrice(metal) {
-  return Number(localStorage.getItem(getBaseKey() + "_" + metal));
-}
-
-function storeBasePrice(metal, price) {
-  const key = getBaseKey() + "_" + metal;
-  if (!localStorage.getItem(key)) localStorage.setItem(key, price);
-}
 
 // ─── Main fetch ──────────────────────────────────────────────────────────────
 async function fetchAndUpdatePrices() {
@@ -34,37 +14,29 @@ async function fetchAndUpdatePrices() {
     const response = await fetch("/prices");
     data = await response.json();
   } catch (e) {
-    // Hard fallback — approximate current USD spot prices
     data = {
-      XAU: 4700,
-      XAG: 73,
-      XPT: 2000,
-      XPD: 1530,
-      history: { XAU: [], XAG: [], XPT: [], XPD: [] }
+      XAU: 4700, XAG: 73, XPT: 2000, XPD: 1530,
+      history: { XAU: [], XAG: [], XPT: [], XPD: [] },
+      nyClose: { XAU: null, XAG: null, XPT: null, XPD: null }
     };
   }
 
-  // Use the server-supplied history arrays as the source of truth.
-  // Append the current live price so the chart always ends at "now".
-  const serverHistory = data.history || { XAU: [], XAG: [], XPT: [], XPD: [] };
+  // Store NY Close prices from server — same on every device
+  if (data.nyClose) nyClose = data.nyClose;
 
+  // Use server-supplied history. Append current price so chart ends at "now".
+  const serverHistory = data.history || { XAU: [], XAG: [], XPT: [], XPD: [] };
   for (const code of ["XAU", "XAG", "XPT", "XPD"]) {
     const pts = Array.isArray(serverHistory[code]) ? [...serverHistory[code]] : [];
-    // Append current price if it differs from the last history point
     if (data[code] != null) {
-      if (pts.length === 0 || pts[pts.length - 1] !== data[code]) {
-        pts.push(data[code]);
-      }
+      if (pts.length === 0 || pts[pts.length - 1] !== data[code]) pts.push(data[code]);
     }
     history[code] = pts;
   }
 
   // Store latest prices for pricing.js (cart / product page calculations)
   localStorage.setItem("latest_prices", JSON.stringify({
-    XAU: data.XAU,
-    XAG: data.XAG,
-    XPT: data.XPT,
-    XPD: data.XPD
+    XAU: data.XAU, XAG: data.XAG, XPT: data.XPT, XPD: data.XPD
   }));
 
   updateMetal("gold",      "XAU", data);
@@ -73,7 +45,7 @@ async function fetchAndUpdatePrices() {
   updateMetal("palladium", "XPD", data);
 }
 
-// ─── Per-metal update ────────────────────────────────────────────────────────
+// ─── Per-metal DOM update ────────────────────────────────────────────────────
 function updateMetal(name, code, data) {
   const priceElement  = document.getElementById(name + "-price");
   if (!priceElement) return;
@@ -86,32 +58,32 @@ function updateMetal(name, code, data) {
   const price = data[code];
   if (price == null) return;
 
-  // Draw sparkline from server-supplied history
   drawSparkline(code, canvas);
 
-  // Daily change
-  let base = getBasePrice(code);
-  if (!base) {
-    storeBasePrice(code, price);
-    base = price;
-  }
-  const diff = price - base;
+  // ── Daily change vs NY Close ──────────────────────────────────────────────
+  const base    = nyClose[code] ?? (history[code].length > 0 ? history[code][0] : price);
+  const diff    = price - base;
+  const pctDiff = base > 0 ? (diff / base) * 100 : 0;
+  const sign    = diff >= 0 ? "+" : "-";
 
   priceElement.innerText  = "$" + price.toFixed(2);
-  changeElement.innerText = "$" + diff.toFixed(2);
+  changeElement.innerText = `${sign}$${Math.abs(diff).toFixed(2)} (${sign}${Math.abs(pctDiff).toFixed(2)}%)`;
 
   if (diff > 0) {
-    arrowElement.innerText   = "▲";
-    arrowElement.className   = "arrow positive";
+    arrowElement.innerText  = "▲";
+    arrowElement.className  = "arrow positive";
+    changeElement.className = "metal-change positive";
   } else if (diff < 0) {
-    arrowElement.innerText   = "▼";
-    arrowElement.className   = "arrow negative";
+    arrowElement.innerText  = "▼";
+    arrowElement.className  = "arrow negative";
+    changeElement.className = "metal-change negative";
   } else {
-    arrowElement.innerText   = "•";
-    arrowElement.className   = "arrow unchanged";
+    arrowElement.innerText  = "•";
+    arrowElement.className  = "arrow unchanged";
+    changeElement.className = "metal-change unchanged";
   }
 
-  // Flash card on price movement
+  // Flash card on price tick
   if (lastPrice[code] !== undefined && card) {
     if (price > lastPrice[code]) {
       card.classList.remove("flash-red");
@@ -133,7 +105,6 @@ function drawSparkline(code, canvas) {
 
   const width  = canvas.width  = canvas.offsetWidth;
   const height = canvas.height = canvas.offsetHeight;
-
   ctx.clearRect(0, 0, width, height);
 
   const prices = history[code];
@@ -153,20 +124,13 @@ function drawSparkline(code, canvas) {
 
   ctx.beginPath();
   ctx.moveTo(points[0].x, points[0].y);
-
   for (let i = 0; i < points.length - 1; i++) {
     const xc = (points[i].x + points[i + 1].x) / 2;
     const yc = (points[i].y + points[i + 1].y) / 2;
     ctx.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
   }
-
   const last = points.length - 1;
-  ctx.quadraticCurveTo(
-    points[last - 1].x,
-    points[last - 1].y,
-    points[last].x,
-    points[last].y
-  );
+  ctx.quadraticCurveTo(points[last-1].x, points[last-1].y, points[last].x, points[last].y);
 
   ctx.lineWidth   = 2;
   ctx.strokeStyle = upTrend ? "#4ADE80" : "#F87171";
@@ -175,11 +139,11 @@ function drawSparkline(code, canvas) {
   ctx.stroke();
 }
 
-// ─── Visibility change (back/forward navigation) ─────────────────────────────
+// ─── Visibility change ────────────────────────────────────────────────────────
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden) fetchAndUpdatePrices();
 });
 
 // ─── Boot ─────────────────────────────────────────────────────────────────────
-fetchAndUpdatePrices();                        // immediate fetch on page load
-setInterval(fetchAndUpdatePrices, 10 * 1000); // refresh every 10 seconds
+fetchAndUpdatePrices();
+setInterval(fetchAndUpdatePrices, 10 * 1000);

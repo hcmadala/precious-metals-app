@@ -123,6 +123,18 @@ async function initDB() {
       )
     `);
 
+    // NY Close table — stores COMEX closing price (5 PM EST each business day)
+    // One row per metal per date. Used as baseline for the daily change ticker.
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS ny_close (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        metal_type VARCHAR(10) NOT NULL,
+        price      DECIMAL(10,4) NOT NULL,
+        close_date DATE NOT NULL,
+        UNIQUE KEY unique_metal_date (metal_type, close_date)
+      )
+    `);
+
     // Migrate existing users table — add new columns if they don't exist yet
     const [cols] = await conn.execute(
       "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users'"
@@ -492,9 +504,54 @@ app.delete("/profile/card/:index", authRequired, async (req, res) => {
   }
 });
 
+// ─── Helpers: NY Close timing ────────────────────────────────────────────────
+// Returns true if the current moment is at or just after 5:00 PM EST on a weekday.
+// We capture the close price in a 10-minute window (17:00–17:10 EST) to avoid
+// missing it due to slight polling offsets.
+
+function isNYCloseWindow() {
+  const now = new Date();
+  // Convert to EST (UTC-5) / EDT (UTC-4) — use fixed UTC-5 for COMEX close
+  const estOffset = -5 * 60; // minutes
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const estMinutes = ((utcMinutes + estOffset) % (24 * 60) + 24 * 60) % (24 * 60);
+  const estHour    = Math.floor(estMinutes / 60);
+  const estMin     = estMinutes % 60;
+
+  // Weekday only (Mon=1 … Fri=5 in EST)
+  const estDay = new Date(now.getTime() + estOffset * 60000).getUTCDay();
+  const isWeekday = estDay >= 1 && estDay <= 5;
+
+  // Window: 17:00–17:09 EST
+  return isWeekday && estHour === 17 && estMin < 10;
+}
+
+// Returns the close_date string (YYYY-MM-DD) for the most recent business day
+// as of 5 PM EST — i.e. today if it is past 5 PM EST on a weekday, otherwise
+// the previous business day.
+function getLastCloseDate() {
+  const now = new Date();
+  const estOffset = -5 * 60;
+  const estTime = new Date(now.getTime() + estOffset * 60000);
+  const estHour = estTime.getUTCHours();
+  const estDay  = estTime.getUTCDay(); // 0=Sun … 6=Sat
+
+  let d = new Date(estTime);
+
+  // If before 5 PM EST today, step back one day
+  if (estHour < 17) d.setUTCDate(d.getUTCDate() - 1);
+
+  // Step back further over weekends
+  const dow = d.getUTCDay();
+  if (dow === 0) d.setUTCDate(d.getUTCDate() - 2); // Sunday → Friday
+  if (dow === 6) d.setUTCDate(d.getUTCDate() - 1); // Saturday → Friday
+
+  return d.toISOString().slice(0, 10);
+}
+
 // ─── Price History Worker ─────────────────────────────────────────────────────
-// Fetches live prices every 5 minutes and saves them to price_history.
-// Automatically deletes records older than 24 hours to keep the table lean.
+// Fetches live prices every 5 minutes, saves them to price_history,
+// and — if we are in the NY Close window — captures the close price.
 
 async function recordPrices() {
   try {
@@ -507,19 +564,32 @@ async function recordPrices() {
       results[metal] = data.price;
     }
 
-    // Insert one row per metal
+    const inCloseWindow = isNYCloseWindow();
+    const closeDate     = getLastCloseDate();
+
     const conn = await pool.getConnection();
     try {
       for (const [metal, price] of Object.entries(results)) {
-        if (price != null) {
+        if (price == null) continue;
+
+        // Always record in price_history
+        await conn.execute(
+          "INSERT INTO price_history (metal_type, price) VALUES (?, ?)",
+          [metal, price]
+        );
+
+        // Capture NY Close price if we are in the 17:00–17:09 EST window
+        if (inCloseWindow) {
           await conn.execute(
-            "INSERT INTO price_history (metal_type, price) VALUES (?, ?)",
-            [metal, price]
+            `INSERT INTO ny_close (metal_type, price, close_date)
+             VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE price = VALUES(price)`,
+            [metal, price, closeDate]
           );
         }
       }
 
-      // Clean up records older than 24 hours
+      // Clean up price_history older than 24 hours
       await conn.execute(
         "DELETE FROM price_history WHERE timestamp < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
       );
@@ -527,20 +597,19 @@ async function recordPrices() {
       conn.release();
     }
 
-    // Keep the in-memory cache fresh so the /prices endpoint stays fast
+    // Keep in-memory cache fresh
     cache.data      = results;
     cache.timestamp = Date.now();
 
-    console.log(`[${new Date().toISOString()}] Price history recorded`);
+    const closeTag = inCloseWindow ? " [NY CLOSE CAPTURED]" : "";
+    console.log(`[${new Date().toISOString()}] Price history recorded${closeTag}`);
   } catch (err) {
     console.error("Price history worker error:", err.message);
   }
 }
 
 function startPriceHistoryWorker() {
-  // Run once immediately so there's data right away
   recordPrices();
-  // Then every 5 minutes (300,000 ms)
   setInterval(recordPrices, 5 * 60 * 1000);
   console.log("Price history worker started (runs every 5 minutes)");
 }
@@ -576,24 +645,33 @@ app.get("/prices", async (req, res) => {
       ORDER BY timestamp ASC
     `);
 
-    // Group history by metal and keep only the most recent 30 points each
+    // Group history by metal, keep last 30 points each
     const history = { XAU: [], XAG: [], XPT: [], XPD: [] };
     for (const row of historyRows) {
       if (history[row.metal_type] !== undefined) {
         history[row.metal_type].push(parseFloat(row.price));
       }
     }
-    // Trim to last 30 points per metal
     for (const metal of Object.keys(history)) {
-      if (history[metal].length > 30) {
-        history[metal] = history[metal].slice(-30);
-      }
+      if (history[metal].length > 30) history[metal] = history[metal].slice(-30);
     }
 
-    // Return current prices + historical arrays in a single response
+    // Fetch the most recent NY Close price for each metal
+    const closeDate = getLastCloseDate();
+    const [closeRows] = await pool.execute(
+      `SELECT metal_type, price FROM ny_close WHERE close_date = ?`,
+      [closeDate]
+    );
+    const nyClose = { XAU: null, XAG: null, XPT: null, XPD: null };
+    for (const row of closeRows) {
+      nyClose[row.metal_type] = parseFloat(row.price);
+    }
+
+    // Return current prices + history + NY close prices in a single response
     res.json({
-      ...cache.data,   // XAU, XAG, XPT, XPD (current spot prices)
-      history          // { XAU: [...], XAG: [...], XPT: [...], XPD: [...] }
+      ...cache.data,   // XAU, XAG, XPT, XPD (current spot)
+      history,         // { XAU: [...], XAG: [...], XPT: [...], XPD: [...] }
+      nyClose          // { XAU: 3120.50, XAG: 34.10, ... } — same on every device
     });
   } catch (error) {
     console.error("Error fetching prices:", error);
@@ -603,7 +681,8 @@ app.get("/prices", async (req, res) => {
       XAG: cache.data?.XAG ?? null,
       XPT: cache.data?.XPT ?? null,
       XPD: cache.data?.XPD ?? null,
-      history: { XAU: [], XAG: [], XPT: [], XPD: [] }
+      history: { XAU: [], XAG: [], XPT: [], XPD: [] },
+      nyClose: { XAU: null, XAG: null, XPT: null, XPD: null }
     });
   }
 });

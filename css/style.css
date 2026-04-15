@@ -5,36 +5,40 @@ body {
     color: #ffffff;
 }
 
+main {
+    min-height: calc(100vh - 300px);
+}
+
+/* ── Ticker ─────────────────────────────────────────────────────────────────── */
 .ticker {
     display: flex;
     position: sticky;
     top: 0;
-    width: 100%;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
     background-color: #1A1C1E;
     border-bottom: 1px solid #2D3135;
-
-    padding: 10px 14px;
-    gap: 12px;
-
+    padding: 8px 14px;
+    gap: 4px;
     box-sizing: border-box;
     z-index: 1000;
+    overflow-x: hidden;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
 }
 
 .metal-card {
-    flex: 1;
+    flex: 1 0 auto;
     display: flex;
     align-items: center;
-    justify-content: center;
-
-    padding: 10px 12px;
-
+    justify-content: flex-start;
+    padding: 8px 8px;
     background-color: #111214;
     border-radius: 10px;
-
     text-decoration: none;
     color: inherit;
-
     transition: background-color 0.2s ease, transform 0.15s ease;
+    white-space: nowrap;
 }
 
 .metal-card:hover {
@@ -42,63 +46,46 @@ body {
     transform: translateY(-2px);
 }
 
-.flash-green {
-    animation: cardFlashGreen 0.35s ease;
-}
-
-.flash-red {
-    animation: cardFlashRed 0.35s ease;
-}
+/* Flash animations */
+.flash-green { animation: cardFlashGreen 0.35s ease; }
+.flash-red   { animation: cardFlashRed   0.35s ease; }
 
 @keyframes cardFlashGreen {
-    0% { background-color: rgba(74,222,128,0.45); }
+    0%   { background-color: rgba(74,222,128,0.45); }
     100% { background-color: #111214; }
 }
-
 @keyframes cardFlashRed {
-    0% { background-color: rgba(248,113,113,0.45); }
+    0%   { background-color: rgba(248,113,113,0.45); }
     100% { background-color: #111214; }
 }
 
+/* Single horizontal row — everything inline, no wrapping */
 .metal-info {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
+    gap: 4px;
+    white-space: nowrap;
+    min-width: max-content;
 }
 
 .metal-name {
     color: #94A3B8;
+    font-size: 15px;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .metal-price {
+    font-size: 15px;
     font-weight: 600;
-    min-width: 70px;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
 }
 
-.arrow {
-    font-weight: bold;
-    width: 12px;
-    text-align: center;
-}
-
-.arrow.positive { color: #4ADE80; }
-.arrow.negative { color: #F87171; }
-.arrow.unchanged { color: #94A3B8; }
-
-.metal-change {
-    min-width: 55px;
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}
-
+/* Sparkline sits inline between price and change */
 .sparkline-container {
-    width: 80px;
-    height: 30px;
+    width: 56px;
+    height: 26px;
+    flex-shrink: 0;
 }
 
 canvas.sparkline {
@@ -107,11 +94,39 @@ canvas.sparkline {
     display: block;
 }
 
-body {
-    margin: 0;
-    background: #0f0f0f;
+/* Arrow */
+.arrow {
+    font-size: 14px;
+    font-weight: bold;
+    flex-shrink: 0;
 }
 
-main {
-    min-height: calc(100vh - 300px);
+.arrow.positive  { color: #4ADE80; }
+.arrow.negative  { color: #F87171; }
+.arrow.unchanged { color: #94A3B8; }
+
+/* Change — dollar + percent on one line, coloured to match arrow */
+.metal-change {
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.metal-change.positive  { color: #4ADE80; }
+.metal-change.negative  { color: #F87171; }
+.metal-change.unchanged { color: #94A3B8; }
+
+/* Hide sparkline early to make room for all text to display comfortably */
+@media (max-width: 1300px) {
+    .sparkline-container {
+        display: none;
+    }
+}
+
+/* If still too cramped, hide sparkline at even smaller screens */
+@media (max-width: 768px) {
+    .sparkline-container {
+        display: none;
+    }
 }

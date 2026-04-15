@@ -29,41 +29,42 @@
 
     <div class="sticky-wrapper">
 
+        <!-- TICKER -->
         <div class="ticker">
             <a href="products.html?metal=gold" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name gold-text">Gold</span>
                     <span id="gold-price" class="metal-price gold">--</span>
-                    <canvas id="gold-chart" width="60" height="18"></canvas>
+                    <div class="sparkline-container"><canvas id="gold-chart" class="sparkline"></canvas></div>
                     <span id="gold-arrow" class="arrow unchanged">•</span>
-                    <span id="gold-change" class="metal-change">--</span>
+                    <span id="gold-change" class="metal-change unchanged">--</span>
                 </div>
             </a>
             <a href="products.html?metal=silver" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name silver-text">Silver</span>
                     <span id="silver-price" class="metal-price silver">--</span>
-                    <canvas id="silver-chart" width="60" height="18"></canvas>
+                    <div class="sparkline-container"><canvas id="silver-chart" class="sparkline"></canvas></div>
                     <span id="silver-arrow" class="arrow unchanged">•</span>
-                    <span id="silver-change" class="metal-change">--</span>
+                    <span id="silver-change" class="metal-change unchanged">--</span>
                 </div>
             </a>
             <a href="products.html?metal=platinum" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name platinum-text">Platinum</span>
                     <span id="platinum-price" class="metal-price platinum">--</span>
-                    <canvas id="platinum-chart" width="60" height="18"></canvas>
+                    <div class="sparkline-container"><canvas id="platinum-chart" class="sparkline"></canvas></div>
                     <span id="platinum-arrow" class="arrow unchanged">•</span>
-                    <span id="platinum-change" class="metal-change">--</span>
+                    <span id="platinum-change" class="metal-change unchanged">--</span>
                 </div>
             </a>
             <a href="products.html?metal=palladium" class="metal-card">
                 <div class="metal-info">
                     <span class="metal-name palladium-text">Palladium</span>
                     <span id="palladium-price" class="metal-price palladium">--</span>
-                    <canvas id="palladium-chart" width="60" height="18"></canvas>
+                    <div class="sparkline-container"><canvas id="palladium-chart" class="sparkline"></canvas></div>
                     <span id="palladium-arrow" class="arrow unchanged">•</span>
-                    <span id="palladium-change" class="metal-change">--</span>
+                    <span id="palladium-change" class="metal-change unchanged">--</span>
                 </div>
             </a>
         </div>
@@ -230,7 +231,7 @@
         </div>
     </section>
     </main>
-    
+
     <script src="js/data.js"></script>
     <script src="js/pricing.js"></script>
     <script src="js/script.js"></script>
@@ -238,7 +239,6 @@
     <script src="js/auth.js"></script>
     <script src="js/home.js"></script>
     <script src="js/footer.js"></script>
-
 
 </body>
 </html>
